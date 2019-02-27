@@ -1,0 +1,101 @@
+version: '2'
+services:
+  php-fpm:
+    image: "forfire/php:0.3"
+    volumes:
+      - /data/wwwroot:/data/wwwroot:rw
+      - /data/logs/php:/data/logs/php:rw
+      - /data/logs/app:/data/logs/app:rw
+      - /data/conf/php/dev/php.ini:/usr/local/etc/php/php.ini:ro
+      - /data/conf/php/dev/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
+      - /data/conf/php/dev/www.conf:/usr/local/etc/www.conf:ro
+    ports:
+      - "9000:9000"
+    networks:
+      - app_net
+    container_name: "compose-php-fpm"
+  nginx:
+    image: "forfire/nginx:0.1"
+    depends_on:
+      - "php-fpm"
+    volumes:
+      - /data/wwwroot:/data/wwwroot:rw
+      - /data/logs/nginx:/data/logs/nginx:rw
+      - /data/conf/nginx/dev:/etc/nginx:ro
+    ports:
+      - "8010:80"
+    networks:
+      - app_net
+    command: nginx -g 'daemon off;'
+    container_name: "compose-nginx"
+  mysql:
+    image: "mysql:5.7"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - /data/data/mysql:/var/lib/mysql
+      - /data/logs/mysql:/logs
+    ports:
+      - "3306:3306"
+    networks:
+      app_net:
+        ipv4_address: 10.10.10.1
+    container_name: "compose-mysql"
+  redis:
+    image: "redis:3.2"
+    volumes:
+      - /data/data/redis:/data
+    ports:
+      - "6379:6379"
+    networks:
+      app_net:
+        ipv4_address: 10.10.10.2
+    command: "redis-server --appendonly yes"
+    container_name: "compose-redis"
+  filebeat:
+    image: "forfire/filebeat:0.1"
+    depends_on:
+      - "elasticsearch"
+    volumes:
+      - /data/conf/filebeat/filebeat.yml:/filebeat.yml:ro
+      - /data/conf/filebeat/fields.yml:/fields.yml:ro
+      - /data/logs:/data/logs
+    networks:
+      - app_net
+    container_name: "compose-filebeat"
+  elasticsearch:
+    image: "elasticsearch"
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /data/data/es:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      app_net:
+        ipv4_address: 10.10.10.3
+    container_name: "compose-elasticsearch"
+  kibana:
+    image: "kibana"
+    depends_on:
+      - "elasticsearch"
+    environment:
+      - "ELASTICSEARCH_URL=http://10.10.10.3:9200"
+    ports:
+      - 5601:5601
+    networks:
+      - app_net
+    container_name: "compose-kibana"
+networks:
+  app_net:
+    external: true
+
+
+
+ 

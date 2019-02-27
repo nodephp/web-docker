@@ -1,0 +1,1 @@
+docker run --name nginx --net=mjnet  -d -v /data/wwwroot:/data/wwwroot -v /data/logs/nginx:/data/logs/nginx -v /data/conf/nginx/dev:/etc/nginx:ro -p 8010:80 forfire/nginx:0.1

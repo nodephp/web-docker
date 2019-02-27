@@ -1,0 +1,65 @@
+filebeat.prospectors:
+
+# Each - is a prospector. Most options can be set at the prospector level, so
+# you can use different prospectors for various configurations.
+# Below are the prospector specific configurations.
+
+- type: log
+  paths: /data/logs/nginx/access.log
+  json.keys_under_root: true
+  json.add_error_key: true
+  fields:
+        document_type: "nginx_access_log"
+- type: log
+  paths: /data/logs/nginx/error.log
+  fields:
+      document_type: "nginx_error_log"
+- type: log
+  paths: /data/logs/php/php_errors.log
+  fields:
+        document_type: "php_error_log"
+- type: log
+  paths:  /data/logs/php/php-fpm-error.log
+  fields:
+        document_type: "php_fpm_error_log"
+- type: log
+  paths:  /data/logs/php/slow.log
+  fields:
+        document_type: "php_slow_log"
+- type: log
+  paths:  /data/logs/app/*/*.log
+  json.keys_under_root: true
+  json.add_error_key: true
+  fields:
+        document_type: "app_log"
+
+
+setup.template.name: "filebeat"
+setup.template.pattern: "filebeat-*"
+setup.template.fields: "fields.yml"
+setup.template.overwrite: false
+setup.template.settings:
+  index.number_of_shards: 3
+
+output.elasticsearch:
+  hosts: ["10.10.10.3:9200"]
+  index: "filebeat-%{[beat.version]}-%{+yyyy.MM.dd}"
+  indices:
+    - index: "filebeat-access-log"
+      when.contains:
+        fields.document_type: "nginx_access_log"
+    - index: "filebeat-nginx-error"
+      when.equals:
+        fields.document_type: "nginx_error_log"
+    - index: "filebeat-php-error"
+      when.equals:
+        fields.document_type: "php_error_log"
+    - index: "filebeat-fpm-error"
+      when.equals:
+        fields.document_type: "php_fpm_error_log"
+    - index: "filebeat-php-slow"
+      when.equals:
+        fields.document_type: "php_slow_log"
+    - index: "filebeat-app-log"
+      when.equals:
+        fields.document_type: "app_log"

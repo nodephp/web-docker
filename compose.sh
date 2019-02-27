@@ -1,0 +1,1 @@
+docker network create --gateway 10.10.0.1 --subnet 10.10.0.0/16 app_net

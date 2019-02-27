@@ -1,0 +1,1 @@
+docker run --name fpm -d -v /data/wwwroot:/data/wwwroot -v /data/logs/php:/data/logs/php -v /data/conf/php/dev/php.ini:/usr/local/etc/php/php.ini:ro -v /data/conf/php/dev/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro -v /data/conf/php/dev/www.conf:/usr/local/etc/www.conf:ro -p 9000:9000 forfire/php:0.3
